@@ -11,30 +11,54 @@ sns.set_theme()
 df = pd.read_csv("train.csv") #Reads data
 nans = df.isna().sum() #Summary of NaN values in data
 df = df.drop("Cabin",axis=1) # Cabin column is dropped because it has a lot of NaNs
-df =  df.drop("Name",axis=1) #Name column is dropped since it has no relevance
-df =  df.drop("Ticket",axis=1) #Ticket column is dropped since it has no relevance
+df =  df.drop("Name",axis=1) # Name column is dropped since it has no relevance
+df =  df.drop("Ticket",axis=1) # Ticket column is dropped since it has no relevance
 df.interpolate(inplace=True) # perform linear interpolation to fill the NaNs (in Age column)
 df.Embarked.fillna(df.Embarked.mode()[0], inplace=True) # replace NaNs in Embarked column with its mode
 
-#Change data type of some columns
-
+#* Change data type of some columns
 cat_type = CategoricalDtype(categories=[3,2, 1], ordered=True)
 df = df.astype({"Survived":"category", "Sex":"category", "Embarked":"category", "Pclass": cat_type})
 
-
+#* Summary of data
 describe = df.describe() #Summary of data
-print(describe)
-df.info()
-#Boxplots to identify outliers
-#plt.figure("")
+info = df.info()
 
-"""plt.subplot(121)
+#* VISUALIZATION
+
+"""plt.subplot(121) 
 df.Age.plot(kind="box",title="Age")
 plt.subplot(122)
 df.Fare.plot(kind="box",title="Fare")
-plt.show() 
+plt.show()""" #Here we can see that Fare and Age have a lot of outliers
+            
+Q1 = df[["Age","Fare"]].quantile(0.25)
+Q3 = df[["Age","Fare"]].quantile(0.75)
+IQR = Q3 - Q1
+outliers = (df[["Age","Fare"]] < (Q1 - IQR * 1.5)) | (df[["Age","Fare"]] > (Q3 + IQR * 1.5))
 
-sns.scatterplot(x="Age", y="Fare", data=df)
+#Here the outliers are removed 
+ageind=df[outliers.Age].index.to_list() #indexes of outliers in age
+fareind= df[outliers.Fare].index.to_list() #indexes of outliers in fare
+dropind = fareind + ageind; dropind = pd.Series(dropind) #combine the indexes of both and cast to series
+df2 = df.drop(dropind.unique())         
+#Comparison between boxplot with and without outliers
+plt.subplot(221)
+df.Age.plot(kind="box", title = "Outliers")
+plt.subplot(222)
+df2.Age.plot(kind="box",  title = "No-outliers")
+plt.subplot(223)
+df.Fare.plot(kind="box",  title = "Outliers")
+plt.subplot(224)
+df2.Fare.plot(kind="box",  title = "No-outliers")
+plt.show()
+
+print(info)
+# Univariate Analysis 
+
+
+
+"""sns.scatterplot(x="Age", y="Fare", data=df)
 #plt.show() 
 
 sns.displot(data=df, x="Age", kde=True)
@@ -53,14 +77,7 @@ sns.boxplot(data=df, x='Survived', y='Fare')
 
 plt.show() """
 
-Q1 = df.quantile(0.25)
-Q3 = df.quantile(0.75)
-IQR = Q3 - Q1
-outliers = (df < (Q1 - IQR * 1.5)) | (df > (Q3 + IQR * 1.5))
 
-#Here the outliers are removed 
-df2= df.loc[~outliers.Age,:]
-df2 = df.loc[~outliers.Fare,:]
 
 #* FURTHER DATA CLEANING SHOULD BE CONSIDERED
 
