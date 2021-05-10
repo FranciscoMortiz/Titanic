@@ -3,18 +3,28 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as  sns
 import os 
+from pandas.api.types import CategoricalDtype
 #import helper_functions
 
 sns.set_theme()
 
 df = pd.read_csv("train.csv") #Reads data
 nans = df.isna().sum() #Summary of NaN values in data
-df =df.drop("Cabin",axis=1) # Cabin column is dropped because it has a lot of NaNs
+df = df.drop("Cabin",axis=1) # Cabin column is dropped because it has a lot of NaNs
+df =  df.drop("Name",axis=1) #Name column is dropped since it has no relevance
+df =  df.drop("Ticket",axis=1) #Ticket column is dropped since it has no relevance
 df.interpolate(inplace=True) # perform linear interpolation to fill the NaNs (in Age column)
 df.Embarked.fillna(df.Embarked.mode()[0], inplace=True) # replace NaNs in Embarked column with its mode
+
+#Change data type of some columns
+
+cat_type = CategoricalDtype(categories=[3,2, 1], ordered=True)
+df = df.astype({"Survived":"category", "Sex":"category", "Embarked":"category", "Pclass": cat_type})
+
+
 describe = df.describe() #Summary of data
-
-
+print(describe)
+df.info()
 #Boxplots to identify outliers
 #plt.figure("")
 
@@ -53,4 +63,6 @@ df2= df.loc[~outliers.Age,:]
 df2 = df.loc[~outliers.Fare,:]
 
 #* FURTHER DATA CLEANING SHOULD BE CONSIDERED
+
+print(df.describe())
 
